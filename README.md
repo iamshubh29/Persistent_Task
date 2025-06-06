@@ -1,4 +1,4 @@
-# Hello World Agent — OpenRouter GPT-3.5 Turbo Chatbot using n8n
+# Hello World Agent 
 
 This project demonstrates the implementation of a simple chatbot agent built using the [n8n](https://n8n.io/) automation platform and the GPT-3.5 Turbo model accessed through [OpenRouter](https://openrouter.ai/). The goal was to create a cost-effective, flexible, and easy-to-deploy conversational agent.
 
@@ -58,7 +58,7 @@ This project proves that a basic chatbot can be efficiently built using OpenRout
 
 ---
 
-**Prepared by:** Shubh MArwdai  
+**Prepared by:** Shubh Marwdai  
 **Project:** Hello World Agent  
 **Platform:** n8n + OpenRouter  
 **Model Used:** GPT-3.5 Turbo
