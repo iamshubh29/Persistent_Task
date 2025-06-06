@@ -58,7 +58,7 @@ This project proves that a basic chatbot can be efficiently built using OpenRout
 
 ---
 
-**Prepared by:** [Your Name]  
+**Prepared by:** Shubh Marwadi  
 **Project:** Hello World Agent  
 **Platform:** n8n + OpenRouter  
 **Model Used:** GPT-3.5 Turbo
