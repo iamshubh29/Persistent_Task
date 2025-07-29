@@ -1,0 +1,113 @@
+{
+  "name": "Summarization Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n{\n\"model\": \"anthropic/claude-3-haiku:beta\",\n\"messages\": [\n{\n\"role\": \"system\",\n\"content\": \"You are a helpful assistant that summarizes text clearly for young students.\"\n},\n{\n\"role\": \"user\",\n\"content\": \"Project can be restored through the dashboard within the next 81 days\\nFree projects cannot be restored through the dashboard if they are paused for more than 90 days. The latest that your project can be restored is by 17 Oct 2025. However, your database backup and Storage objects will still be available for download thereafter.\"\n}\n]\n}\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -160,
+        160
+      ],
+      "id": "eccc8562-e9e2-4be8-9db6-ff8c6289c621",
+      "name": "Generate Summary via API"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b8ca67fa-0348-4486-a77f-4074cb679071",
+              "name": "content",
+              "value": "={{ $json.choices[0].message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        40,
+        160
+      ],
+      "id": "536965f2-372f-4a54-b4cf-1ccbaa0279c3",
+      "name": "Extract Summary Text"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -400,
+        160
+      ],
+      "id": "d678ed1a-f529-4151-8632-cdf3429464db",
+      "name": "When Executed by Another Workflow"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Generate Summary via API": {
+      "main": [
+        [
+          {
+            "node": "Extract Summary Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Summary Text": {
+      "main": [
+        []
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Generate Summary via API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "95fa7198-a598-4ae2-a6cc-e3b38a110de0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "51a151c4e3546fae824ae7435d95ab6051d3b64260145986af6d7ce41347cf96"
+  },
+  "id": "SrheH1FvQ392lrsE",
+  "tags": []
+}

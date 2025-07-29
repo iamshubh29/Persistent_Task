@@ -1,0 +1,161 @@
+{
+  "name": "Mindmap Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hcti.io/v1/image",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html>\n<head>\n    <title>Mindmap</title>\n</head>\n<body>\n    <div class=\"mermaid\">\n        {{ $('Generate SVG Mindmap').item.json.choices[0].message.content }}\n    </div>\n    <script src=\"https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js\"></script>\n    <script>mermaid.initialize({startOnLoad:true});</script>\n</body>\n</html>"
+            },
+            {
+              "name": "css",
+              "value": "=/* Style for the nodes (boxes) */ .mermaid .node rect, .mermaid .node circle, .mermaid .node ellipse, .mermaid .node polygon {   fill: #e6e6fa; /* Light lavender background */   stroke: #9370db; /* Medium purple border */   stroke-width: 2px; }  /* Style for the connecting lines */ .mermaid .edgePath .path {   stroke: #9370db; /* Medium purple lines */ }  /* Style for the text inside the nodes */ .mermaid .node .label {   font-family: 'Inter', sans-serif;   color: #333; /* Dark grey text for readability */ }"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -600,
+        -120
+      ],
+      "id": "51d603cb-0a39-48b1-8108-5d220842fb49",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "DmODWSjEejm2rtkI",
+          "name": "Shubh"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.from.id }}",
+        "file": "={{ $json.url }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        -120
+      ],
+      "id": "8696ca7c-2cd0-4989-823f-219833ed08c5",
+      "name": "Send a photo message",
+      "webhookId": "62688d78-4666-4dcf-b345-f44c3329aee6",
+      "credentials": {
+        "telegramApi": {
+          "id": "IinjCCM9zsZ5F5E1",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -960,
+        -120
+      ],
+      "id": "07f307fa-2f3c-4430-ada7-76f755087db0",
+      "name": "Telegram Trigger",
+      "webhookId": "2e8b0469-a114-4908-898b-f73f846fac6f",
+      "credentials": {
+        "telegramApi": {
+          "id": "IinjCCM9zsZ5F5E1",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"anthropic/claude-3-haiku\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"You are an expert in creating mindmaps using Mermaid.js syntax. Based on the following topic, generate the Mermaid code for a top-down flowchart. Return ONLY the Mermaid syntax, do not include markdown fences or any other text. Start directly with 'graph TD'. Here is the topic:\\n\\n{{ $json.message.text }}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -800,
+        -120
+      ],
+      "id": "29b7c945-dba9-49d4-9300-7feed0dee5ca",
+      "name": "Generate SVG Mindmap",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "faPV2lMPqTwnoyac",
+          "name": "Auth"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Send a photo message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Generate SVG Mindmap",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate SVG Mindmap": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e43b2aa5-7c63-4ba8-9908-88e4c402d856",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "51a151c4e3546fae824ae7435d95ab6051d3b64260145986af6d7ce41347cf96"
+  },
+  "id": "p7IZJKx3AyAdN4bR",
+  "tags": []
+}

@@ -1,0 +1,568 @@
+{
+  "name": "Preprocessing",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "agent_input"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -800,
+        -100
+      ],
+      "id": "7998076c-ac65-4438-9733-6471500e6dde",
+      "name": "When Executed by Another Workflow",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "url": "={{$json.input}}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -20,
+        -280
+      ],
+      "id": "45d96421-4d33-4acb-b5af-5996162d2d68",
+      "name": "Get Website HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $('Get Website HTML').item.rawBody; const cleaned_text = html.replace(/<style[^>]*>[\\s\\S]*?<\\/style>/gi, '').replace(/<script[^>]*>[\\s\\S]*?<\\/script>/gi, '').replace(/<[^>]+>/g, ' ').replace(/\\s{2,}/g, ' ').trim(); return [{ json: { cleaned_text: cleaned_text, source_type: 'website' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        -280
+      ],
+      "id": "edb0a034-8a71-4607-88fa-01691c7ee373",
+      "name": "Extract Text from HTML"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "cleaned_text",
+              "value": "={{ $json.transcript }}"
+            },
+            {
+              "name": "source_type",
+              "value": "youtube"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        -100
+      ],
+      "id": "f5b0e4c3-990c-4fea-86c5-b9de0416ae8b",
+      "name": "Set YouTube Output"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        140
+      ],
+      "id": "65d1cb32-b5f8-4aeb-9185-caa35a1025f2",
+      "name": "Convert File to Text"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "cleaned_text",
+              "value": "={{ $json.text }}"
+            },
+            {
+              "name": "source_type",
+              "value": "={{ $('Detect Input Type').item.json.source_type }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        500,
+        140
+      ],
+      "id": "6d9004c4-963d-48d6-baeb-f92337df620b",
+      "name": "Set File Output"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This code correctly reads the 'agent_input' passed from the Main Workflow\nconst input = $json.agent_input || '';\n\nlet source_type = 'text';\n\nif (input.match(/\\.pdf$/i)) { \n  source_type = 'pdf'; \n} else if (input.match(/\\.csv$/i)) { \n  source_type = 'csv'; \n} else if (input.match(/\\.txt$/i)) { \n  source_type = 'txt'; \n} else if (input.match(/https?:\\/\\/(?:www\\.)?(?:youtube\\.com|youtu\\.be)/i)) { \n  source_type = 'youtube'; \n} else if (input.match(/^https?:\\/\\//i)) { \n  source_type = 'website'; \n}\n\nreturn [{ json: { input: input, source_type: source_type } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        -100
+      ],
+      "id": "09c68ad0-fc1b-45c4-9002-75b696fd7e34",
+      "name": "Detect Input Type"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.source_type}}",
+                    "rightValue": "pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "82902d7f-61cf-419f-9e8f-6acb6332b39c"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.source_type}}",
+                    "rightValue": "youtube",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "d89cf1de-bfef-4722-b637-0debb89d248d"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.source_type}}",
+                    "rightValue": "website",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "0a730f53-9752-4cd7-9d77-f84642966f71"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.source_type}}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "76cdd766-f8e3-441f-b5a5-81c6b35d83c9"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.source_type}}",
+                    "rightValue": "txt",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "869e8f4b-92db-48bd-adb9-df7c51fdcfd8"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.source_type}}",
+                    "rightValue": "csv",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "a503b416-1040-4350-afb2-6ae2d4eab0be"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -400,
+        -180
+      ],
+      "id": "a1a55fd7-400d-4ff9-ab40-f738156170d2",
+      "name": "Route by Type"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "cleaned_text",
+              "value": "={{ $json.input }}",
+              "id": "7f08c543-ae52-486d-a9d6-94b0301ee96d"
+            },
+            {
+              "id": "9ea78a20-e72a-43b7-bff5-aa2d20f0b86c",
+              "name": "source_type",
+              "value": "text",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -20,
+        -460
+      ],
+      "id": "0fbabfca-7eb0-4f36-9e06-12b4cf160419",
+      "name": "Plain Text"
+    },
+    {
+      "parameters": {
+        "url": "https://api.supadata.tech/api/v1/transcript/youtube?url={{ $json.input }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer sd_..."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -20,
+        -120
+      ],
+      "id": "c698347c-d261-49f2-9293-12425997ec24",
+      "name": "YouTube Transcript"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.input }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -20,
+        140
+      ],
+      "id": "635cc3e7-1474-4ea2-affe-efe293e0d136",
+      "name": "Download File"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        820,
+        -160
+      ],
+      "id": "9123aeda-9969-4445-aa5c-fc3f2f354052",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This code takes the messy input from the Merge node\n// and creates a new, clean output with only the fields we need.\nconst item = $json;\n\nconst cleanOutput = {\n  cleaned_text: item.cleaned_text,\n  source_type: item.source_type\n};\n\nreturn [{\n  json: cleanOutput\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1080,
+        -100
+      ],
+      "id": "1a7a3cdb-6957-4697-b260-d93183a61cea",
+      "name": "Format Final Output"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Detect Input Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Website HTML": {
+      "main": [
+        [
+          {
+            "node": "Extract Text from HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert File to Text": {
+      "main": [
+        [
+          {
+            "node": "Set File Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Input Type": {
+      "main": [
+        [
+          {
+            "node": "Route by Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Type": {
+      "main": [
+        [
+          {
+            "node": "Download File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "YouTube Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Website HTML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Plain Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouTube Transcript": {
+      "main": [
+        [
+          {
+            "node": "Set YouTube Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download File": {
+      "main": [
+        [
+          {
+            "node": "Convert File to Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set File Output": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Plain Text": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text from HTML": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Set YouTube Output": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Format Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1,
+    "errorWorkflow": "e5Ula2N7KqWsyecG"
+  },
+  "versionId": "38f43903-a3d9-4dc8-af1c-0d4aaa7e7a75",
+  "meta": {
+    "instanceId": "51a151c4e3546fae824ae7435d95ab6051d3b64260145986af6d7ce41347cf96"
+  },
+  "id": "oXZzjc0ER3u7Tx3o",
+  "tags": []
+}

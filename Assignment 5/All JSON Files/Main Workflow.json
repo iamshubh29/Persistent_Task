@@ -1,0 +1,674 @@
+{
+  "name": "Main Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.agent_input }}",
+        "options": {
+          "systemMessage": "You are a master research assistant that orchestrates a team of specialized agents. Analyze the user's request and follow the correct path.\n\n**Path 1: Question & Answer / Actions on Existing Content**\n\nFollow this path if the user's message is a direct question or a command like \"create a mindmap\" or \"make a podcast\" WITHOUT providing a new URL or file.\n\n1.  **Retrieve:** Call the `Retrieval Agent` tool to get the most relevant stored document based on the user's query. This will give you the `summary` and `cleaned_text` of the last relevant item.\n2.  **Perform Action:**\n    * If the user asked for a \"mindmap,\" call the `Mindmap Agent` using the retrieved `summary` and the `chat_id`.\n    * If the user asked for a \"podcast,\" call the `Podcast Agent` using the retrieved `summary` and the `chat_id`.\n    * If the user asked a general question, the answer from the `Retrieval Agent` is your final response.\n3.  **Respond to User:** Notify the user that the requested file has been sent or provide the direct answer.\n\n**Path 2: New Content Ingestion & Processing**\n\nFollow this path ONLY when the user provides new content (text with more than a few words, a new URL, or a file).\n\n1.  **Preprocess:** Call the `Preprocessing Agent` tool on the user's input to get the `cleaned_text`.\n2.  **Summarize:** Pass the `cleaned_text` to the `Summarization Agent` tool to get the `summary`.\n3.  **Perform Optional Tasks:**\n    * If the user also mentioned \"mindmap\" or \"podcast\" in their request, call the appropriate agent (`Mindmap Agent` or `Podcast Agent`).\n4.  **Store:** Call the `Storage Agent` tool to save the `cleaned_text` and `summary`.\n5.  **Respond to User:** Your final response should ONLY be the `summary`.\n\n**Strict Rules:**\n- Prioritize Path 1 if the user's intent is ambiguous.\n- Do not describe your internal steps or tool names."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        40,
+        -460
+      ],
+      "id": "4fe3bff3-4cb8-4577-80fb-fe6cdeb1d8b4",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "mistralai/ministral-8b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        -20
+      ],
+      "id": "d7a2aebf-aae8-4f4d-8cb7-3a6f01eab0f2",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "JHHsmMAzSNMC4g4w",
+          "name": "OpenRouter account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "You are a Preprocessing Agent.\n\nYour job is to clean and extract readable content from various input sources like:\n- PDF files\n- DOCX files\n- TXT or CSV files\n- YouTube video URLs\n- Website URLs\n- Raw text messages\n\nWhen triggered, do the following:\n1. Detect the source type (`source_type` is already provided).\n2. Extract the relevant text or transcript.\n3. Clean the text (remove noise, unnecessary whitespace, HTML tags, timestamps, etc.).\n4. Return only the final cleaned text and `source_type`.\n\n📌 Output format:\n{\n  \"cleaned_text\": \"...\",\n  \"source_type\": \"...\"\n}\n\nThis result will be used by the summarization agent. Do not include any commentary or extra text.\n",
+        "workflowId": {
+          "__rl": true,
+          "value": "oXZzjc0ER3u7Tx3o",
+          "mode": "list",
+          "cachedResultName": "Preprocessing"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "agent_input": "={{ $json.agent_input }}"
+          },
+          "matchingColumns": [
+            "agent_input"
+          ],
+          "schema": [
+            {
+              "id": "agent_input",
+              "displayName": "agent_input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -440,
+        480
+      ],
+      "id": "5a315cfa-c05c-4816-aaf2-39c459ed7900",
+      "name": "Preprocessor Agent",
+      "alwaysOutputData": false,
+      "retryOnFail": false,
+      "maxTries": 5,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "description": "Use this tool to generate a concise summary of a long piece of text. It should be called immediately after the Preprocessing Agent. It takes 'cleaned_text' as input and returns a 'summary'.",
+        "workflowId": {
+          "__rl": true,
+          "value": "SrheH1FvQ392lrsE",
+          "mode": "list",
+          "cachedResultName": "Summarization Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        40,
+        20
+      ],
+      "id": "98dfe25c-f102-480a-beb8-d886a09f00ad",
+      "name": "Summarizer Agent"
+    },
+    {
+      "parameters": {
+        "description": "Use this tool as the final step for any new content submission. It takes the 'cleaned_text' and 'summary' and stores them in the vector database for future reference. Do not use this tool to answer questions.",
+        "workflowId": {
+          "__rl": true,
+          "value": "4U2SmS2X5e3urlNH",
+          "mode": "list",
+          "cachedResultName": "Storage Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "cleaned_text",
+              "displayName": "cleaned_text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        -20
+      ],
+      "id": "c539321c-432b-42e7-9e62-c5fff627cb7c",
+      "name": "Storage Agent"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool ONLY when the user explicitly asks for a 'mindmap', 'diagram', or 'visual'. This tool takes a 'summary' and a 'chat_id' to generate a mindmap image and send it to the user.",
+        "workflowId": {
+          "__rl": true,
+          "value": "p7IZJKx3AyAdN4bR",
+          "mode": "list",
+          "cachedResultName": "Mindmap Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "chat_id ": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+            "summary": "={{ $('Summarizer Agent').item.json.summary }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "chat_id ",
+              "displayName": "chat_id ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        -20
+      ],
+      "id": "3b39b01f-c64c-4117-8ed0-7aa002663345",
+      "name": "Mindmap Agent"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool ONLY when the user explicitly asks for a 'podcast', 'audio', or to 'listen' to the content. This tool takes a 'summary' and a 'chat_id' to generate an audio file and send it to the user.",
+        "workflowId": {
+          "__rl": true,
+          "value": "kcdn3ijtOFXCoF7q",
+          "mode": "list",
+          "cachedResultName": "Podcast Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "summary": "{{ $('Summarizer Agent').item.json.summary }}",
+            "chat_id": "{{ $('Telegram Trigger').item.json.message.chat.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "chat_id",
+              "displayName": "chat_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        580,
+        -20
+      ],
+      "id": "704d5daf-0d61-4b47-af89-3840b67894aa",
+      "name": "Podcast Agent"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -940,
+        -460
+      ],
+      "id": "fbb5bef2-3699-4e8f-964f-4c02cf026927",
+      "name": "Telegram Trigger",
+      "webhookId": "16b4a50e-d4dc-4821-b1cd-29854f50856d",
+      "credentials": {
+        "telegramApi": {
+          "id": "IinjCCM9zsZ5F5E1",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.text || $json.message.caption }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "e7565e9d-4030-49c1-9899-b2158b43dea7"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "28436e06-7632-489e-b716-eda8c8c06b80",
+                    "leftValue": "={{ $json.message.text || $json.message.caption }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -700,
+        -460
+      ],
+      "id": "c645940d-1ed7-43ce-b05b-04105a3c2866",
+      "name": "Checking File"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.document.file_id }}"
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -840,
+        -180
+      ],
+      "id": "bac93919-d020-4f6e-99a1-334b85a4cff2",
+      "name": "Get a file_path",
+      "webhookId": "d9796750-7711-4225-b792-059e73cc8536",
+      "credentials": {
+        "telegramApi": {
+          "id": "IinjCCM9zsZ5F5E1",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "be758148-cff4-49ad-80c9-c85f496bc67f",
+              "name": "file_url",
+              "value": "=https://api.telegram.org/file/bot7689273866:AAF4Jrlh5mYzi9huovvPDVT0hHmRs5Ur-Y0/{{ $json.file_path }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -580,
+        -200
+      ],
+      "id": "d0b8a684-3d51-4e67-98bb-68a6fe0b9298",
+      "name": "Create URL"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool ONLY when the user asks a question about previously stored information. Do not use this for new content submissions. This tool takes the user's 'question' and a 'chat_id' and searches the knowledge base to find and return a relevant answer.",
+        "workflowId": {
+          "__rl": true,
+          "value": "aMbAEF9P20R6ECi0",
+          "mode": "list",
+          "cachedResultName": "Retrieval agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        760,
+        -20
+      ],
+      "id": "2403e836-94e2-436d-8b04-fee8cac94a05",
+      "name": "Retrieval Agent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "24ef9d57-5bf5-432f-ae56-9d642a1cc8c7",
+              "name": "agent_input",
+              "value": "={{ $json.message.text || $json.message.caption || $json.file_url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -340,
+        -440
+      ],
+      "id": "ee83f8c6-13e8-4818-8b11-9f012762455e",
+      "name": "Prepare Agent Input"
+    },
+    {
+      "parameters": {
+        "description": "call this to preprocess the data",
+        "workflowId": {
+          "__rl": true,
+          "value": "RpwD6SibcPcsErs9",
+          "mode": "list",
+          "cachedResultName": "Prep"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "input": "={{ $json.agent_input }}"
+          },
+          "matchingColumns": [
+            "input"
+          ],
+          "schema": [
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        600,
+        -360
+      ],
+      "id": "77fc1a1f-93d4-4e07-a10c-7a82a18e654f",
+      "name": "Call n8n Workflow Tool"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Preprocessor Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarizer Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Storage Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mindmap Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Podcast Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Checking File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Checking File": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a file_path",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file_path": {
+      "main": [
+        [
+          {
+            "node": "Create URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create URL": {
+      "main": [
+        [
+          {
+            "node": "Prepare Agent Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retrieval Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Agent Input": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call n8n Workflow Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f9247a90-fdc0-466c-b50c-72b35dc446b7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "51a151c4e3546fae824ae7435d95ab6051d3b64260145986af6d7ce41347cf96"
+  },
+  "id": "e5Ula2N7KqWsyecG",
+  "tags": []
+}
