@@ -1,0 +1,88 @@
+{
+  "name": "Assignment 1",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -336,
+        -128
+      ],
+      "id": "b89293c0-e6ad-4b21-8321-166b5eb763ad",
+      "name": "When chat message received",
+      "webhookId": "73412e40-6484-4071-ab83-62bdbab1d32d"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -128
+      ],
+      "id": "3acd88e6-6e0a-4ff4-9daa-e3c58d3189e4",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "z-ai/glm-4.5-air:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        160
+      ],
+      "id": "df26d4ff-320b-408d-9f2d-8421db361f98",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "eyUkDlH7udCXKyd9",
+          "name": "OpenRouter account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0a8b68cb-2e72-44c7-8bf3-ad367cb0e62f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4e97946fd12ff6a78cfec72146a9561a3fa93135c6fd747a3d2a7be2d909ad3c"
+  },
+  "id": "WJktZUmEiJcWJeIF",
+  "tags": []
+}
