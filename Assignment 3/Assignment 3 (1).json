@@ -1,0 +1,155 @@
+{
+  "name": "Assignment 3",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        96
+      ],
+      "id": "4e903b82-6506-4ad2-9925-1c735a4027a1",
+      "name": "When chat message received",
+      "webhookId": "73412e40-6484-4071-ab83-62bdbab1d32d"
+    },
+    {
+      "parameters": {
+        "model": "z-ai/glm-4.5-air:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        304,
+        320
+      ],
+      "id": "8ab0d1df-cc9c-4333-88b3-596620f6029f",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "eyUkDlH7udCXKyd9",
+          "name": "OpenRouter account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7938d83a-4245-4de2-af37-5e223ca7667a",
+              "name": "content",
+              "value": "={{ $json.results[0].content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        160,
+        96
+      ],
+      "id": "6af911df-ed5a-4b5d-b9a6-59966c5db6fb",
+      "name": "Content Showing"
+    },
+    {
+      "parameters": {
+        "query": "={{ $json.chatInput }}",
+        "options": {}
+      },
+      "type": "@tavily/n8n-nodes-tavily.tavily",
+      "typeVersion": 1,
+      "position": [
+        0,
+        96
+      ],
+      "id": "9316de00-ed78-4ba2-9e9b-f609c1208468",
+      "name": "Tavily Search",
+      "credentials": {
+        "tavilyApi": {
+          "id": "k5NXpnKyhaO5oMR8",
+          "name": "Tavily account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are helpful assistent so you have to shown only content to user not whole json of this  {{ $json.content }}.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        368,
+        96
+      ],
+      "id": "f52cc5d1-388d-4f46-a127-2a71d45b0e29",
+      "name": "AI Agent"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Tavily Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Showing": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tavily Search": {
+      "main": [
+        [
+          {
+            "node": "Content Showing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5b02dbd1-c05a-4755-b79b-2a33bcafed1f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4e97946fd12ff6a78cfec72146a9561a3fa93135c6fd747a3d2a7be2d909ad3c"
+  },
+  "id": "J6inU3DEWaot8roQ",
+  "tags": []
+}
